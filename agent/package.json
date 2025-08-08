@@ -1,0 +1,33 @@
+{
+  "name": "@alice/jilive",
+  "version": "0.1.0",
+  "description": "Live streaming agent with danmaku processing using Wonderland v3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "2.0.0-beta.9",
+    "@ai-sdk/openai": "2.0.0-beta.12",
+    "@ai-sdk/react": "2.0.0-beta.28",
+    "@alice/wond-v3": "workspace:*",
+    "ai": "5.0.0-beta.28",
+    "chalk": "^5.4.1",
+    "dotenv": "^17.0.1",
+    "express": "^4.21.2",
+    "ioredis": "^5.6.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.15.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE Connection Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .connected { background: #2a4a2a; }
+        .disconnected { background: #4a2a2a; }
+        .log {
+            background: #2a2a2a;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover { background: #5a5a5a; }
+    </style>
+</head>
+<body>
+    <h1>SSE Connection Test</h1>
+    
+    <div id="status" class="status disconnected">
+        Status: Disconnected
+    </div>
+    
+    <div>
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <h2>Test Commands</h2>
+    <div>
+        <button onclick="sendCommand('look', {x: 0.5, y: 0.5})">Look Right-Up</button>
+        <button onclick="sendCommand('look', {x: -0.5, y: -0.5})">Look Left-Down</button>
+        <button onclick="sendCommand('reset', {})">Reset Focus</button>
+        <button onclick="sendCommand('expression', {id: 0})">Expression 0</button>
+        <button onclick="sendCommand('motion', {group: 'idle', index: 0})">Idle Motion</button>
+    </div>
+    
+    <h2>Connection Log</h2>
+    <div id="log" class="log"></div>
+
+    <script>
+        let eventSource = null;
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+        
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : '#ffffff';
+            logEl.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function updateStatus(connected) {
+            statusEl.className = `status ${connected ? 'connected' : 'disconnected'}`;
+            statusEl.textContent = `Status: ${connected ? 'Connected' : 'Disconnected'}`;
+        }
+        
+        function connect() {
+            if (eventSource) {
+                log('Already connected', 'error');
+                return;
+            }
+            
+            const url = 'http://localhost:8011/sse';
+            log(`Connecting to ${url}...`);
+            
+            eventSource = new EventSource(url);
+            
+            eventSource.onopen = () => {
+                log('Connected!', 'success');
+                updateStatus(true);
+            };
+            
+            eventSource.onmessage = (event) => {
+                log(`Message: ${event.data}`, 'success');
+            };
+            
+            eventSource.onerror = (error) => {
+                log('Connection error - check if backend is running', 'error');
+                updateStatus(false);
+                
+                // EventSource will auto-reconnect, but we'll show status
+                setTimeout(() => {
+                    if (eventSource.readyState === EventSource.CONNECTING) {
+                        log('Reconnecting...');
+                    }
+                }, 1000);
+            };
+        }
+        
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                log('Disconnected');
+                updateStatus(false);
+            }
+        }
+        
+        function clearLog() {
+            logEl.innerHTML = '';
+        }
+        
+        async function sendCommand(type, data) {
+            const url = `http://localhost:8011/api/control/${type}`;
+            log(`Sending ${type} command...`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                log(`Command sent: ${result.clients} clients`, 'success');
+            } catch (error) {
+                log(`Failed to send command: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-connect on load
+        connect();
+    </script>
+</body>
+</html>
