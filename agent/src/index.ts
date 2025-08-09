@@ -9,6 +9,7 @@ import { config, getRedisConfig } from './config/index.js';
 import chalk from 'chalk';
 import express from 'express';
 import { createDanmakuRouter } from './danmaku/api.js';
+import { MOTION_LIBRARY, getMotionById } from './actions/motionLibrary.js';
 
 async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof createDanmakuPump>; subtitlePushConsumer: ReturnType<typeof createSubtitlePushConsumer>; customApp: express.Application }> {
   console.log(chalk.bold.blue('\n🎮 Starting JiLive Agent...\n'));
@@ -65,6 +66,101 @@ async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof cr
   // Add danmaku routes
   const danmakuRouter = createDanmakuRouter(danmakuPump);
   customApp.use('/api', danmakuRouter);
+  
+  // Get motion library
+  customApp.get('/api/motion/library', async (req: express.Request, res: express.Response) => {
+    try {
+      res.json({ 
+        success: true, 
+        data: MOTION_LIBRARY,
+        count: MOTION_LIBRARY.length
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get motion library'
+      });
+    }
+  });
+  
+  // Get specific motion by ID
+  customApp.get('/api/motion/:id', async (req: express.Request, res: express.Response) => {
+    try {
+      const { id } = req.params;
+      const motion = getMotionById(id as any);
+      
+      if (!motion) {
+        res.status(404).json({ 
+          success: false, 
+          error: `Motion with ID '${id}' not found` 
+        });
+        return;
+      }
+      
+      res.json({ 
+        success: true, 
+        data: motion
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get motion'
+      });
+    }
+  });
+  
+  // Add motion control endpoints
+  customApp.post('/api/motion/look', async (req: express.Request, res: express.Response) => {
+    try {
+      const { x, y, instant } = req.body;
+      
+      // 转发到 vtuber-backend
+      const response = await fetch('http://localhost:8011/api/control/look', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ x, y, instant })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Backend API failed: ${response.statusText}`);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Motion command sent',
+        data: { x, y, instant }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to send motion'
+      });
+    }
+  });
+  
+  customApp.post('/api/motion/reset', async (req: express.Request, res: express.Response) => {
+    try {
+      // 转发到 vtuber-backend
+      const response = await fetch('http://localhost:8011/api/control/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Backend API failed: ${response.statusText}`);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Reset command sent'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to reset'
+      });
+    }
+  });
   
   // Add subtitle test endpoint
   customApp.post('/api/subtitle/test', async (req: express.Request, res: express.Response) => {

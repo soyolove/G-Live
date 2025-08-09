@@ -129,6 +129,14 @@ main() {
         "pnpm dev" \
         "8012"
     
+    sleep 2
+    
+    # 4. 启动控制面板（端口 8016）
+    start_service "Control Panel" \
+        "$PROJECT_ROOT/agent-control-panel" \
+        "pnpm dev" \
+        "8016"
+    
     echo -e "\n${GREEN}================================${NC}"
     echo -e "${GREEN}✨ 所有服务启动完成！${NC}"
     echo -e "${GREEN}================================${NC}"
@@ -137,7 +145,8 @@ main() {
     echo -e "${BLUE}📺 Live2D Frontend:${NC} http://localhost:8010"
     echo -e "${BLUE}🔌 SSE Backend:${NC} http://localhost:8011"
     echo -e "${BLUE}🤖 AI Agent:${NC} http://localhost:8012"
-    echo -e "${BLUE}📝 弹幕测试页面:${NC} http://localhost:8012/danmaku-sender.html"
+    echo -e "${BLUE}🎮 控制面板:${NC} http://localhost:8016"
+    echo -e "${BLUE}📝 旧版测试页:${NC} http://localhost:8012/danmaku-sender.html"
     echo ""
     echo -e "${YELLOW}提示：${NC}"
     echo "- 每个服务都在独立的终端窗口中运行"

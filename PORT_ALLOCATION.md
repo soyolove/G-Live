@@ -12,7 +12,7 @@
 | 8013 | jilive-agent Custom API | AI 虚拟主播大脑 - 弹幕接收 API | `apps/jilive-agent/` |
 | 8014 | jirai-alpha Agent API | Telegram Bot Agent API | `apps/jirai-alpha/` |
 | 8015 | jilive-danmaku-collector | 弹幕采集服务 | `apps/jilive-danmaku-collector/`  |
-| 8016 | 预留 | - | - |
+| 8016 | jilive-control-panel | JiLive 控制面板 (Next.js) | `apps/jilive/agent-control-panel/` |
 | 8017 | 预留 | - | - |
 | 8018 | 预留 | - | - |
 | 8019 | 预留 | - | - |
