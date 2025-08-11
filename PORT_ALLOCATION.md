@@ -10,7 +10,7 @@
 | 8011 | jilive-vtuber 后端 | SSE 控制服务器，提供远程控制 API | `apps/jilive-vtuber/backend/` |
 | 8012 | jilive-agent API | AI 虚拟主播大脑 - 系统监控 API | `apps/jilive-agent/` |
 | 8013 | jilive-agent Custom API | AI 虚拟主播大脑 - 弹幕接收 API | `apps/jilive-agent/` |
-| 8014 | jirai-alpha Agent API | Telegram Bot Agent API | `apps/jirai-alpha/` |
+| 8014 | 预留 | - | - |
 | 8015 | jilive-danmaku-collector | 弹幕采集服务 | `apps/jilive-danmaku-collector/`  |
 | 8016 | jilive-control-panel | JiLive 控制面板 (Next.js) | `apps/jilive/agent-control-panel/` |
 | 8017 | 预留 | - | - |
@@ -78,7 +78,4 @@ PORT=8011 npm run dev
 
 # jilive-agent
 JILIVE_API_PORT=8012 pnpm dev
-
-# jirai-alpha
-AGENT_PORT=8014 pnpm dev
 ```
