@@ -5,13 +5,13 @@ import {
   createSubtitlePushConsumer,
   createDanmakuAIReactor,
   createInvestmentCommentaryReactor
-} from './controllers/index';
+} from './live/controllers/index';
 import { addInvestmentIntegration } from './investment/integration';
 import { config, getRedisConfig } from './config/index';
 import chalk from 'chalk';
 import express from 'express';
-import { createDanmakuRouter } from './danmaku/api';
-import { MOTION_LIBRARY, getMotionById } from './actions/motionLibrary';
+import { createDanmakuRouter } from './live/danmaku/api';
+import { MOTION_LIBRARY, getMotionById } from './live/actions/motionLibrary';
 import {investmentConfig } from './config/investment.config';
 
 async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof createDanmakuPump>; subtitlePushConsumer: ReturnType<typeof createSubtitlePushConsumer>; customApp: express.Application }> {
@@ -225,82 +225,6 @@ async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof cr
   console.log(chalk.gray(`  - POST http://localhost:${customPort}/api/danmaku/batch - Submit danmaku batch`));
   console.log(chalk.gray(`  - POST http://localhost:${customPort}/api/subtitle/test - Test subtitle push`));
 
-  // Example: Simulate danmaku input (for testing)
-  if (config.logging.verbose) {
-    console.log(chalk.magenta('\n🧪 Running in verbose mode - simulating test danmaku...'));
-    
-    setTimeout(() => {
-      danmakuPump.emitDanmaku({
-        id: 'test-1',
-        userId: 'user-1',
-        username: 'TestUser',
-        content: '说: Hello JiLive!',
-        platform: 'test',
-        roomId: 'test-room'
-      });
-    }, 2000);
-
-    setTimeout(() => {
-      danmakuPump.emitMultipleDanmakus([
-        {
-          id: 'test-2',
-          userId: 'user-2',
-          username: 'User2',
-          content: '开心 😊',
-          platform: 'test',
-          roomId: 'test-room'
-        },
-        {
-          id: 'test-3',
-          userId: 'user-3',
-          username: 'User3',
-          content: '跳舞',
-          platform: 'test',
-          roomId: 'test-room'
-        },
-        {
-          id: 'test-4',
-          userId: 'user-4',
-          username: 'User4',
-          content: 'Amazing!',
-          platform: 'test',
-          roomId: 'test-room'
-        },
-        {
-          id: 'test-5',
-          userId: 'user-5',
-          username: 'User5',
-          content: 'Amazing!',
-          platform: 'test',
-          roomId: 'test-room'
-        },
-        {
-          id: 'test-6',
-          userId: 'user-6',
-          username: 'User6',
-          content: 'Amazing!',
-          platform: 'test',
-          roomId: 'test-room'
-        },
-        {
-          id: 'test-7',
-          userId: 'user-7',
-          username: 'User7',
-          content: 'Amazing!',
-          platform: 'test',
-          roomId: 'test-room'
-        },
-        {
-          id: 'test-8',
-          userId: 'user-8',
-          username: 'User8',
-          content: 'Amazing!',
-          platform: 'test',
-          roomId: 'test-room'
-        }
-      ]);
-    }, 4000);
-  }
 
   // Export for external use
   return { agent, danmakuPump, subtitlePushConsumer, customApp };

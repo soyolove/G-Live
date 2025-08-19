@@ -1,6 +1,6 @@
 import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from '@alice/wond-v3';
-import { DanmakuReceived, DanmakuBatch, DanmakuProcessed } from '@/events/danmaku';
-import { SubtitleReply, HeadActionPush, ActionGenerated } from '@/events/actions';
+import { DanmakuReceived, DanmakuBatch, DanmakuProcessed } from '@/live/events/danmaku';
+import { SubtitleReply, HeadActionPush, ActionGenerated } from '@/live/events/actions';
 import { generateText, stepCountIs, tool } from 'ai';
 import { getChatAI } from '@/lib/chatModelSelector';
 import { config } from '@/config';

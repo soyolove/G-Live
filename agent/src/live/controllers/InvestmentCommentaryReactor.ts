@@ -1,5 +1,5 @@
 import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from '@alice/wond-v3';
-import { DataSourceRecordReceived, DataSourceSignalGenerated } from '../investment/events/index.js';
+import { DataSourceRecordReceived, DataSourceSignalGenerated } from '../../investment/events/index.js';
 import { SubtitleReply, HeadActionPush } from '../events/actions.js';
 import { generateText, tool } from 'ai';
 import { getChatAI } from '@/lib/chatModelSelector';
