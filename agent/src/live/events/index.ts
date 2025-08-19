@@ -1,2 +1,2 @@
-export * from './danmaku.js';
-export * from './actions.js';
+export * from './danmaku';
+export * from './actions';

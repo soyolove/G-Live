@@ -7,7 +7,9 @@ import {
   createInvestmentCommentaryReactor
 } from './live/controllers/index';
 import { addInvestmentIntegration } from './investment/integration';
-import { config, getRedisConfig } from './config/index';
+import { InvestmentHandler } from './investment/handler';
+import { startApiServer } from './investment/server';
+import { config } from './config/index';
 import chalk from 'chalk';
 import express from 'express';
 import { createDanmakuRouter } from './live/danmaku/api';
@@ -20,12 +22,10 @@ async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof cr
   // Create agent
   const agent = new Agent({
     name: config.agent.name,
-    apiMode: config.agent.apiMode.enabled ? {
-      port: config.agent.apiMode.port,
-      host: config.agent.apiMode.host,
-      enableCors: config.agent.apiMode.enableCors,
-      apiPrefix: config.agent.apiMode.apiPrefix
-    } : undefined,
+    apiMode: {
+      port:3005
+
+    },
     eventPoolOptions: {
       redisUrl: `redis://${config.redis.host}:${config.redis.port}/${config.redis.db}`,
       agentId: 'jilive',
@@ -48,7 +48,12 @@ async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof cr
   agent.addController(subtitlePushConsumer.controller);
   agent.addController(investmentCommentaryReactor);
   
-
+  // Create InvestmentHandler for tracking
+  const investmentHandler = new InvestmentHandler({
+    redisUrl: `redis://${config.redis.host}:${config.redis.port}/${config.redis.db}`,
+    traceTTL: 3600,
+    metricsTTL: 86400
+  });
   
   const investmentIntegration = await addInvestmentIntegration(agent, {
     baseUrl: process.env.DATASOURCE_BASE_URL || 'https://djirai.onrender.com',
@@ -56,11 +61,21 @@ async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof cr
     debug: config.logging.verbose,
     redisUrl: `redis://${config.redis.host}:${config.redis.port}/${config.redis.db}`,
     investmentConfig:investmentConfig,
+    investmentHandler: investmentHandler,
     enableTracking: true,
   });
   
   // Start investment data subscriptions
   await investmentIntegration.startDataSourceSubscriptions();
+  
+  // Start investment handler HTTP server
+  startApiServer({
+    investmentHandler,
+    testAgent: agent,
+    pumpRecord: investmentIntegration.pumpRecord,
+    port: 8017
+  });
+  console.log(chalk.cyan(`📊 Investment Handler API available at: http://localhost:8017`));
 
   // Create a separate Express server for custom routes
   const customApp = express();

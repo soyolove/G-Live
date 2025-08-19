@@ -1,52 +1,52 @@
 import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from '@alice/wond-v3';
-import { DataSourceRecordReceived, DataSourceSignalGenerated } from '../../investment/events/index.js';
+import { DataSourceSignalGenerated } from '../../investment/events/index.js';
 import { SubtitleReply, HeadActionPush } from '../events/actions.js';
-import { generateText, tool } from 'ai';
+import { generateText, stepCountIs, tool } from 'ai';
 import { getChatAI } from '@/lib/chatModelSelector';
 import { z } from 'zod';
 
 interface InvestmentCommentaryState extends ReactorControllerState {
-  processedRecords: number;
-  generatedCommentaries: number;
+
 }
 
 export function createInvestmentCommentaryReactor() {
   const reactorConfig = {
     name: 'Investment Commentary Reactor',
-    description: 'Converts investment information into entertaining VTuber commentary',
+    description: 'Converts investment signals into entertaining VTuber commentary',
     type: 'reactor' as const,
     
-    inputEventTypes: [DataSourceRecordReceived, DataSourceSignalGenerated],
+    inputEventTypes: [DataSourceSignalGenerated],  // 只处理信号，不处理原始记录
     outputEventTypes: [SubtitleReply, HeadActionPush],
     outputTaskTypes: [],
 
-    processInterval: 10000, // 每10秒处理一次投资信息
+    processInterval: 5000, // 每5秒处理一次
     isActive: true,
     
     async processEvents(events: AgentEvent[], emitter: ControllerEmitter, controller: ReactorController<InvestmentCommentaryState>) {
       
-      console.log(`[Investment Commentary] Processing ${events.length} investment events`);
-
       if (events.length === 0) return;
 
       try {
-        // 分别处理不同类型的投资事件
-        const records = events.filter(e => e.type === DataSourceRecordReceived.type);
+        // 只处理投资信号
         const signals = events.filter(e => e.type === DataSourceSignalGenerated.type);
+        
+        console.log(`[Investment Commentary] Processing ${signals.length} investment signals`);
 
-        // 优先处理投资信号（更重要）
-        if (signals.length > 0) {
-          const signal = DataSourceSignalGenerated.schema.parse(signals[0].payload);
-          await processInvestmentSignal(signal, emitter);
+        for (const signalEvent of signals) {
+          const signal = DataSourceSignalGenerated.schema.parse(signalEvent.payload);
+          
+          // 检查信号内容是否有效
+          const content = signal.signalAnalysis
+          if (!content || content.trim().length === 0) {
+            console.log(`[Investment Commentary] Skipping signal with empty content from ${signal.entityName}`);
+            controller.state.skippedEmpty++;
+            continue;
+          }
+          
+          console.log(`[Investment Commentary] Processing signal from ${signal.entityName}: ${content.slice(0, 50)}...`);
+          
+          await processInvestmentSignal(signal.signalAnalysis, emitter);
           controller.state.generatedCommentaries++;
-        }
-        // 否则处理普通记录
-        else if (records.length > 0) {
-          // 随机选择一条记录进行评论（避免太频繁）
-          const randomRecord = records[Math.floor(Math.random() * records.length)];
-          const record = DataSourceRecordReceived.schema.parse(randomRecord.payload);
-          await processInvestmentRecord(record, emitter);
-          controller.state.processedRecords++;
         }
         
       } catch (error) {
@@ -55,7 +55,7 @@ export function createInvestmentCommentaryReactor() {
     }
   };
 
-  async function processInvestmentSignal(signal: any, emitter: ControllerEmitter) {
+  async function processInvestmentSignal(signalText:string , emitter: ControllerEmitter) {
     const systemPrompt = `你是一个正在直播的VTuber，你看到了一条重要的投资信号。
 你需要用轻松幽默的方式对这个信号进行吐槽或评论。
 
@@ -71,9 +71,7 @@ export function createInvestmentCommentaryReactor() {
 - 看到利空消息时可以摇头表示担心`;
 
     const userPrompt = `投资信号：
-实体：${signal.entityName}
-类型：${signal.signalType === 'BUY' ? '买入信号' : signal.signalType === 'SELL' ? '卖出信号' : signal.signalType}
-内容摘要：${signal.summary || signal.content?.slice(0, 100)}
+  ${signalText}
 
 请用VTuber的风格对这个投资信号进行吐槽评论。`;
 
@@ -123,6 +121,7 @@ export function createInvestmentCommentaryReactor() {
       }],
       temperature, // 使用从getChatAI获取的温度
       tools,
+      stopWhen: stepCountIs(5), // 连续使用工具
     });
 
     // 发出字幕
@@ -137,53 +136,8 @@ export function createInvestmentCommentaryReactor() {
     console.log(`[Investment Commentary] Signal comment: ${result.text}`);
   }
 
-  async function processInvestmentRecord(record: any, emitter: ControllerEmitter) {
-    // 简单记录只有30%概率评论（避免太吵）
-    if (Math.random() > 0.3) return;
-
-    const systemPrompt = `你是一个正在直播的VTuber，你看到了一条投资资讯。
-像在闲聊一样随口吐槽一下这条资讯。
-
-要求：
-1. 非常简短，10-20字
-2. 像是自言自语的吐槽
-3. 可以用"诶？""哦~""嗯..."这类语气词
-4. 保持轻松，不要分析`;
-
-    const userPrompt = `资讯：${record.content?.slice(0, 100)}
-来源：${record.entityName}
-
-用一句话随口吐槽一下。`;
-
-    const { model, temperature } = getChatAI('reaction');
-
-    const result = await generateText({
-      model,
-      system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: userPrompt
-      }],
-      temperature,
-    });
-
-    // 只有50%概率真的说出来（模拟偶尔的自言自语）
-    if (Math.random() < 0.5) {
-      emitter.event(SubtitleReply).emit({
-        text: result.text,
-        type: 'reaction', // 使用有效的类型
-        duration: 3000, // 短暂显示
-        priority: 'low',
-        timestamp: Date.now()
-      });
-
-      console.log(`[Investment Commentary] Casual comment: ${result.text}`);
-    }
-  }
-
   const initialState: InvestmentCommentaryState = {
-    processedRecords: 0,
-    generatedCommentaries: 0,
+  
   };
   
   return new ReactorController(

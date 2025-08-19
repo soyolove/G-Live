@@ -169,25 +169,25 @@ export const investmentConfig: InvestmentConfig = {
   },
   
   ai: {
-    // analysisModel: {
-    //   provider: 'google',
-    //   model: 'medium',
-    //   temperature: 0.3,
-    // },
-    // judgeModel: {
-    //   provider: 'google',
-    //   model: 'medium',
-    //   temperature: 0.1,
-    // },
     analysisModel: {
-      provider: 'qwen',
-      model: 'large',
+      provider: 'google',
+      model: 'medium',
       temperature: 0.3,
     },
     judgeModel: {
-      provider: 'qwen',
-      model: 'large',
+      provider: 'google',
+      model: 'medium',
       temperature: 0.1,
     },
+    // analysisModel: {
+    //   provider: 'qwen',
+    //   model: 'large',
+    //   temperature: 0.3,
+    // },
+    // judgeModel: {
+    //   provider: 'qwen',
+    //   model: 'large',
+    //   temperature: 0.1,
+    // },
   },
 };
