@@ -1,20 +1,14 @@
 {
-  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
     "composite": true,
     "target": "es2022",
     "downlevelIteration": true,
-     "baseUrl": ".",
+    "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-      
     }
-
   },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../../../packages/wond-v3" }
-  ]
+  "include": ["src/**/*"]
 }
