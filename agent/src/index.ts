@@ -3,13 +3,16 @@ import {
   createDanmakuPump,
   createActionPushConsumer,
   createSubtitlePushConsumer,
-  createDanmakuAIReactor
-} from './controllers/index.js';
-import { config, getRedisConfig } from './config/index.js';
+  createDanmakuAIReactor,
+  createInvestmentCommentaryReactor
+} from './controllers/index';
+import { addInvestmentIntegration } from './investment/integration';
+import { config, getRedisConfig } from './config/index';
 import chalk from 'chalk';
 import express from 'express';
-import { createDanmakuRouter } from './danmaku/api.js';
-import { MOTION_LIBRARY, getMotionById } from './actions/motionLibrary.js';
+import { createDanmakuRouter } from './danmaku/api';
+import { MOTION_LIBRARY, getMotionById } from './actions/motionLibrary';
+import {investmentConfig } from './config/investment.config';
 
 async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof createDanmakuPump>; subtitlePushConsumer: ReturnType<typeof createSubtitlePushConsumer>; customApp: express.Application }> {
   console.log(chalk.bold.blue('\n🎮 Starting JiLive Agent...\n'));
@@ -36,12 +39,28 @@ async function main(): Promise<{ agent: Agent; danmakuPump: ReturnType<typeof cr
   const danmakuAIReactor = createDanmakuAIReactor();
   const actionPushConsumer = createActionPushConsumer();
   const subtitlePushConsumer = createSubtitlePushConsumer();
+  const investmentCommentaryReactor = createInvestmentCommentaryReactor();
 
   // Add controllers to agent
   agent.addController(danmakuPump.controller);
   agent.addController(danmakuAIReactor);
   agent.addController(actionPushConsumer.controller);
   agent.addController(subtitlePushConsumer.controller);
+  agent.addController(investmentCommentaryReactor);
+  
+
+  
+  const investmentIntegration = await addInvestmentIntegration(agent, {
+    baseUrl: process.env.DATASOURCE_BASE_URL || 'https://djirai.onrender.com',
+    apiKey: process.env.DATASOURCE_API_KEY,
+    debug: config.logging.verbose,
+    redisUrl: `redis://${config.redis.host}:${config.redis.port}/${config.redis.db}`,
+    investmentConfig:investmentConfig,
+    enableTracking: true,
+  });
+  
+  // Start investment data subscriptions
+  await investmentIntegration.startDataSourceSubscriptions();
 
   // Create a separate Express server for custom routes
   const customApp = express();

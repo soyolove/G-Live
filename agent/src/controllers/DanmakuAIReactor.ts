@@ -1,9 +1,9 @@
 import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from '@alice/wond-v3';
-import { DanmakuReceived, DanmakuBatch, DanmakuProcessed } from '../events/danmaku.js';
-import { SubtitleReply, HeadActionPush, ActionGenerated } from '../events/actions.js';
+import { DanmakuReceived, DanmakuBatch, DanmakuProcessed } from '@/events/danmaku';
+import { SubtitleReply, HeadActionPush, ActionGenerated } from '@/events/actions';
 import { generateText, stepCountIs, tool } from 'ai';
-import { getAIByScenario } from '../lib/ai.js';
-import { config } from '../config/index.js';
+import { getChatAI } from '@/lib/chatModelSelector';
+import { config } from '@/config';
 import { z } from 'zod';
 
 interface DanmakuAIBatchState extends ReactorControllerState {
@@ -114,7 +114,7 @@ export function createDanmakuAIReactor() {
         }
 
         // 获取AI模型
-        const { model, temperature } = getAIByScenario('chat');
+        const { model, temperature } = getChatAI('chat');
 
         // 构建用户消息
         let userPrompt = `以下是最近${processedDanmakus.length}条弹幕：\n\n${danmakuSummary}`;

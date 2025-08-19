@@ -5,7 +5,13 @@
     "rootDir": "./src",
     "composite": true,
     "target": "es2022",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+     "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+      
+    }
+
   },
   "include": ["src/**/*"],
   "references": [

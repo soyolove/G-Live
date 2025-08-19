@@ -1,9 +1,13 @@
+/**
+ * AI基础服务层
+ * 提供纯粹的AI provider功能，不包含任何业务逻辑
+ * 各域应该创建自己的AI选择器来使用这些基础功能
+ */
+
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI, google as googleTools } from "@ai-sdk/google";
 import { LanguageModel,wrapLanguageModel,defaultSettingsMiddleware, generateText, tool } from "ai";
-import { config } from '../config/index.js';
 import { z } from 'zod';
-
 
 import dotenv from "dotenv";
 
@@ -11,14 +15,6 @@ dotenv.config();
 
 export type Model = "small" | "medium" | "large" | "xlarge" | "reason" | 'vision';
 export type Platform = "qwen" | "openai" | "deepseek" | "google";
-
-// AI使用场景
-export type AIScenario = 
-  | "chat"        // 聊天，强调风格化和语义化
-  | "compress"    // 压缩，上下文长，遵从指示
-  | "judge"       // 判断，往往是Y/N
-  | "analysis"    // 分析，需要高性能和准确
-  | "choice";     // 选择，要在一系列选项中选出符合要求的
 
 // 模型映射接口
 interface ModelMapping {
@@ -96,7 +92,7 @@ export const google = createGoogleGenerativeAI({
   
 })
 
- function getProvider({
+export function getProvider({
   provider = defaultSelect,
 }: {
   provider: Platform;
@@ -116,7 +112,7 @@ export const google = createGoogleGenerativeAI({
   }
 }
 
- function getModel({
+export function getModel({
   inputModel = defaultVersion,
   provider = defaultSelect,
 }: {
@@ -139,25 +135,16 @@ export const google = createGoogleGenerativeAI({
 }
 
 
-// 场景配置类型
-interface ScenarioConfig {
-  provider: Platform;
-  model: Model;
-  temperature: number;
-}
-
-
-// 场景化配置（从config.ts导入）
-function getScenarioConfigFromConfig(): Record<AIScenario, ScenarioConfig> {
-  return config.ai.scenarios;
-}
-
-function getAI({
+/**
+ * 获取AI模型实例
+ * 这是基础功能，各域应该基于此构建自己的场景选择器
+ */
+export function getAI({
     inputModel = defaultVersion,
     provider = defaultSelect,
 }:{
-inputModel: Model;
-provider: Platform;     
+    inputModel: Model;
+    provider: Platform;     
 }):LanguageModel{
     const modelName = getModel({ inputModel, provider });
     const aiProvider = getProvider({ provider })
@@ -172,47 +159,10 @@ provider: Platform;
     return aiProvider(modelName)
 }
 
-// 新增：通过场景获取AI配置
-export function getAIByScenario(scenario: AIScenario): { model: LanguageModel; temperature: number; provider: Platform; modelType: Model } {
-  const scenarioConfigs = getScenarioConfigFromConfig();
-  const config = scenarioConfigs[scenario];
-  if (!config) {
-    throw new Error(`Unsupported AI scenario: ${scenario}`);
-  }
-  
-  const model = getAI({
-    inputModel: config.model,
-    provider: config.provider,
-  });
-  
-  return {
-    model,
-    temperature: config.temperature,
-    provider: config.provider,
-    modelType: config.model,
-  };
-}
-
-// 新增：获取场景配置
-export function getScenarioConfig(scenario: AIScenario) {
-  const scenarioConfigs = getScenarioConfigFromConfig();
-  const config = scenarioConfigs[scenario];
-  if (!config) {
-    throw new Error(`Unsupported AI scenario: ${scenario}`);
-  }
-  return { ...config };
-}
-
-// // 导出prompts配置
-// export function getAIPrompts() {
-//   return config.ai.prompts;
-// }
-
 /**
  * 智能压缩长文本
- * @param content 需要压缩的文本内容
- * @param options 压缩选项
- * @returns 压缩后的文本，如果超过错误阈值则抛出错误
+ * 注意：这个函数暂时保留在这里，但未来不同域有必要构建自己的版本
+ * @deprecated 将在后续构建telegram和investment不同的lib/aiCompressor.ts
  */
 export async function compressContent(
   content: string,
@@ -221,13 +171,17 @@ export async function compressContent(
     chunkSize?: number;
     targetLength?: number;
     errorThreshold?: number;
+    model: LanguageModel;  // 新增：必须传入模型
+    temperature?: number;    // 新增：允许传入温度
   }
 ): Promise<string> {
   const {
-    skipThreshold = config.ai.compression.skipCompressionThreshold,
-    chunkSize = config.ai.compression.chunkSize,
-    targetLength = config.ai.compression.targetLength,
-    errorThreshold = config.ai.compression.errorThreshold,
+    skipThreshold = 10000,  // 默认值，之前从config读取
+    chunkSize = 8000,
+    targetLength = 4000,
+    errorThreshold = 50000,
+    model,
+    temperature = 0.2,
   } = options || {};
 
   // 检查是否超过错误阈值
@@ -253,7 +207,7 @@ export async function compressContent(
     console.log(`[AI Compression] Compressing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)`);
     
     try {
-      const compressed = await compressChunk(chunk, targetLength);
+      const compressed = await compressChunk(chunk, targetLength, model, temperature);
       compressedChunks.push(compressed);
       console.log(`[AI Compression] Chunk ${i + 1} compressed: ${chunk.length} → ${compressed.length} chars`);
     } catch (error) {
@@ -270,7 +224,7 @@ export async function compressContent(
   if (result.length > skipThreshold) {
     console.log(`[AI Compression] Final compression: ${result.length} characters`);
     try {
-      result = await compressChunk(result, Math.min(targetLength * 2, skipThreshold));
+      result = await compressChunk(result, Math.min(targetLength * 2, skipThreshold), model, temperature);
       console.log(`[AI Compression] Final result: ${result.length} characters`);
     } catch (error) {
       console.error(`[AI Compression] Final compression failed:`, error);
@@ -295,12 +249,19 @@ function splitIntoChunks(text: string, chunkSize: number): string[] {
 
 /**
  * 压缩单个文本块
+ * @deprecated 将在后续跟着本体一起构建不同域的版本
  */
-async function compressChunk(chunk: string, targetLength: number): Promise<string> {
-  const { model } = getAIByScenario('compress');
+async function compressChunk(
+  chunk: string, 
+  targetLength: number,
+  model?: LanguageModel,
+  temperature: number = 0.2
+): Promise<string> {
+  // 如果没有传入模型，使用默认的
+  const aiModel = model || getAI({ provider: 'google', inputModel: 'medium' });
   
   const result = await generateText({
-    model,
+    model: aiModel,
     system: `你是一个专业的文本压缩助手。请将给定的文本压缩到约${targetLength}字符，保留所有关键信息。
 
 压缩要求：
@@ -320,7 +281,7 @@ async function compressChunk(chunk: string, targetLength: number): Promise<strin
 ${chunk}
 
 请直接返回压缩后的文本，不要添加任何解释或说明。`,
-    temperature: 0.2,
+    temperature,
   });
 
   return result.text.trim();
