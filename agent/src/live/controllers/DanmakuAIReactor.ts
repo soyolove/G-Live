@@ -1,4 +1,4 @@
-import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from '@alice/wond-v3';
+import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from 'wond-v3';
 import { DanmakuReceived, DanmakuBatch, DanmakuProcessed } from '@/live/events/danmaku';
 import { SubtitleReply, HeadActionPush, ActionGenerated } from '@/live/events/actions';
 import { generateText, stepCountIs, tool } from 'ai';

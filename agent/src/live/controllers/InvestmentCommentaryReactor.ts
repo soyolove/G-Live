@@ -1,4 +1,4 @@
-import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from '@alice/wond-v3';
+import { ReactorController, ReactorControllerState, ControllerEmitter, AgentEvent } from 'wond-v3';
 import { DataSourceSignalGenerated } from '../../investment/events/index.js';
 import { SubtitleReply, HeadActionPush } from '../events/actions.js';
 import { generateText, stepCountIs, tool } from 'ai';

@@ -1,4 +1,4 @@
-import { AgentEvent } from '@alice/wond-v3';
+import { AgentEvent } from 'wond-v3';
 import Redis from 'ioredis';
 
 export interface ControllerTrackingData {

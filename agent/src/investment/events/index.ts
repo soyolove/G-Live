@@ -1,4 +1,4 @@
-import { defineEvent } from '@alice/wond-v3';
+import { defineEvent } from 'wond-v3';
 import { z } from 'zod';
 
 /**

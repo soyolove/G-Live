@@ -1,4 +1,4 @@
-import { createManualPump, ControllerEmitter } from '@alice/wond-v3';
+import { createManualPump, ControllerEmitter } from 'wond-v3';
 import { DanmakuReceived } from '../events/danmaku.js';
 
 export function createDanmakuPump() {

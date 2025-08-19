@@ -1,4 +1,4 @@
-import { ReactorController, ControllerEmitter } from '@alice/wond-v3';
+import { ReactorController, ControllerEmitter } from 'wond-v3';
 import { DanmakuBatch, DanmakuProcessed } from '../events/danmaku.js';
 import { ActionGenerated, HeadActionPush, SubtitleReply } from '../events/actions.js';
 

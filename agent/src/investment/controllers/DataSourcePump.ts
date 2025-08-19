@@ -1,4 +1,4 @@
-import { createManualPump } from '@alice/wond-v3';
+import { createManualPump } from 'wond-v3';
 import { DataSourceRecordReceived } from '../events';
 
 export function createDataSourcePump() {

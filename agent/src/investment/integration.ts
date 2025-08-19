@@ -1,4 +1,4 @@
-import { Agent } from '@alice/wond-v3';
+import { Agent } from 'wond-v3';
 import { createDataSourcePump } from './controllers/DataSourcePump';
 import { createDataSourceClassifierReactor } from './controllers/DataSourceClassifierReactor';
 import { createDataSourceDeduplicationReactor } from './controllers/DataSourceDeduplicationReactor';

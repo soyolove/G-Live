@@ -1,4 +1,4 @@
-import { ReactorController, ReactorControllerState, ReactorControllerConfig, ControllerEmitter, AgentEvent } from '@alice/wond-v3';
+import { ReactorController, ReactorControllerState, ReactorControllerConfig, ControllerEmitter, AgentEvent } from 'wond-v3';
 import { DataSourceRecordClassified, DataSourceRecordDeduplicated } from '@/investment/events';
 import { generateObject, embed } from 'ai';
 import { getInvestmentAI } from '@/investment/lib/aiModelSelector';

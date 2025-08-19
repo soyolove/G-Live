@@ -1,4 +1,4 @@
-import { IteratorController, ControllerEmitter } from '@alice/wond-v3';
+import { IteratorController, ControllerEmitter } from 'wond-v3';
 import { DanmakuReceived, DanmakuBatch } from '../events/danmaku.js';
 import { randomUUID } from 'crypto';
 

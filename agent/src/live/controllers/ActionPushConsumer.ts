@@ -1,4 +1,4 @@
-import { ReactorController, ControllerEmitter } from '@alice/wond-v3';
+import { ReactorController, ControllerEmitter } from 'wond-v3';
 import { HeadActionPush, ActionExecuted } from '../events/actions.js';
 import chalk from 'chalk';
 import { nod, shake } from '../actions/headMotions.js';

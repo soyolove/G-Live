@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { generateFlowId, InvestmentHandler } from '@/investment/handler';
-import type { Agent } from '@alice/wond-v3';
+import type { Agent } from 'wond-v3';
 
 interface ServerDependencies {
   investmentHandler: InvestmentHandler;

@@ -1,4 +1,4 @@
-import { Agent } from '@alice/wond-v3';
+import { Agent } from 'wond-v3';
 import { 
   createDanmakuPump,
   createActionPushConsumer,
